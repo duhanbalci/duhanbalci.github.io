@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+  <head><meta name="generator" content="Hexo 3.8.0">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="yanm1ng&#39;s blog">
+  <meta name="keyword" content="hexo-theme, vuejs">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      Nginx Çoklu Domain Konfigürasyonu | Duhan BALCI
+    
+  </title>
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="//cdn.bootcss.com/highlight.js/9.12.0/styles/tomorrow.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+</head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png">
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span>Duhan BALCI</span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Anasayfa</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Anasayfa</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>Nginx Çoklu Domain Konfigürasyonu</h2>
+  <p class="post-date">2019-02-16</p>
+  <div class="arrow-down">
+    <a href="javascript:;"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><h4 id="Konfigurasyon-Dosyalari"><a href="#Konfigurasyon-Dosyalari" class="headerlink" title="Konfigürasyon Dosyaları"></a>Konfigürasyon Dosyaları</h4><p>Nginx’in ana konfigürasyon dosyası <strong>/etc/nginx/nginx.conf</strong> dosyasıdır.Ubuntu kurulumunda dosyanın içinde alttaki 2 satır’da vardır.</p>
+<pre><code>include /etc/nginx/conf.d/*.conf;
+include /etc/nginx/sites-enabled/*;
+</code></pre><p>Gördüğünüz gibi <strong>conf.d/</strong> ve <strong>sites-enabled/</strong> dizinindeki tüm dosyaları include ediyor.Yani bizim bu klasörlere eklediğimiz her dosya nginx tarafından okunuyor.Eğer <strong>/etc/nginx/nginx.conf</strong> içerisinde bu satırlar yoksa <strong>http</strong> block’unun içine ekleyebilirsiniz.  </p>
+<h4 id="Dns-Ayarlari"><a href="#Dns-Ayarlari" class="headerlink" title="Dns Ayarları"></a>Dns Ayarları</h4><p>Şimdi istediğimiz şey birden fazla domain’i bir sunucu üzerinde kullanmak.Bunun için öncelikle <strong>domain panelinizden dns ayarlarınıza girip, sunucu ip adresiniz için A kaydı eklemeniz</strong> gereklidir.Bu işlem genelde bir kaç saatte gerçekleşir ama bazen daha da uzun sürebilir.<br>Bu işlem domain’ninizi sunucunuza yönlendirmek için yeterlidir.Sırada Nginx ile bunu kontrol etmek var.  </p>
+<h4 id="Konfigurasyon-Dosyalarina-Server-Block-Ekleme"><a href="#Konfigurasyon-Dosyalarina-Server-Block-Ekleme" class="headerlink" title="Konfigürasyon Dosyalarına Server Block Ekleme"></a>Konfigürasyon Dosyalarına Server Block Ekleme</h4><p>Nginx ile bu domain’leri kontrol etmek için konfigürasyon dosyasına <strong>server block</strong>‘lar eklememiz gerekiyor.Bunu ister <strong>conf.d/</strong> dizini altına açacağınız tek bir dosyaya, isterseniz benim de tercih ettiğim gibi <strong>sites-enabled/</strong> dizini altına her domain için ayrı ayrı dosya oluşturarak yapabilirsiniz.</p>
+<p>Örnekte biz 2 adet domain ve bu domain’lerden birisine ait subdomain için konfigürasyon dosyaları oluşturup bu dosyalara <strong>server block</strong>‘lar ekleyeceğiz.Örnek domainlerimiz:</p>
+<blockquote>
+<ul>
+<li><a href="http://duhanbalci.com/">duhanbalci.com</a></li>
+<li><a href="http://balciduhan.com/" target="_blank" rel="noopener">balciduhan.com</a></li>
+<li><a href="http://sub.duhanbalci.com/" target="_blank" rel="noopener">sub.duhanbalci.com</a></li>
+</ul>
+</blockquote>
+<p>Domain kontrol panelinizden subdomain için de A kaydı eklemeyi unutmayın.Eğer her subdomain için ayrı ayrı kayıt eklemek istemiyorsanız subdomain yerine “ <strong>*</strong> “ koyarak A kaydınızı ekleyebilirsiniz.Böylece tüm subdomainler sizin sunucunuza yönlenecektir.Domain firmanız bunu desteklemiyorsa nameserver’larınızı <a href="https://cloudflare.com/" target="_blank" rel="noopener">cloudflare</a>‘ye yönlendirerek cloudflare’nin dns servisini kullanabilirsiniz. </p>
+<hr>
+<p>Öncelikle varolan konfigürasyon dosyalarını silmek için alttaki komutları kullanıyoruz.<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rm /etc/nginx/conf.d/*</span><br><span class="line">rm /etc/nginx/sites-enabled/*</span><br></pre></td></tr></table></figure></p>
+<p>Konfigürasyon dosyalarımızı <strong>sites-enabled/</strong> dizini altında oluşturacağız.Her domain’in root klasörü ise /var/www/<strong>domain</strong> formatında olacak.Alttaki komutlarla root klasörlerimizi oluşturuyoruz.<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir /var/www/duhanbalci.com</span><br><span class="line">mkdir /var/www/balciduhan.com</span><br><span class="line">mkdir /var/www/sub.duhanbalci.com</span><br></pre></td></tr></table></figure></p>
+<p>Konfigürasyon dosyalarımızın yapısı aynı olacağı için her birini teker teker yazmayacağım.Alttaki <strong><a href="http://duhanbalci.com/">duhanbalci.com</a></strong> için oluşturacağımız konfigürasyon dosyasının içeriği olacak.Diğerleri için <strong>server_name</strong> ve <strong>root</strong> parametrelerini değiştirmeniz yeterlidir.Alttaki konfigürasyon PHP7.2 içindir.Eğer sizinki farklıysa <strong>location ~ .php$ {</strong> ile başlayan blok değiştirilmelidir.<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">  <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">  <span class="attribute">listen</span> [::]:<span class="number">80</span>;</span><br><span class="line">  <span class="attribute">server_name</span> duhanbalci.com www.duhanbalci.com;</span><br><span class="line">  <span class="attribute">root</span> /var/www/duhanbalci.com;</span><br><span class="line">  <span class="attribute">index</span> index.php index.html index.htm ;</span><br><span class="line"></span><br><span class="line">  <span class="attribute">location</span> / &#123;</span><br><span class="line">    <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ =<span class="number">404</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="attribute">error_page</span> <span class="number">404</span> /<span class="number">404</span>.html;</span><br><span class="line">  <span class="attribute">error_page</span> <span class="number">500</span> <span class="number">502</span> <span class="number">503</span> <span class="number">504</span> /50x.html;</span><br><span class="line"></span><br><span class="line">  <span class="attribute">location</span> = /50x.html &#123;</span><br><span class="line">    <span class="attribute">root</span> /usr/share/nginx/html;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="attribute">location</span> <span class="regexp">~ \.php$</span> &#123;</span><br><span class="line">    <span class="attribute">fastcgi_pass</span> unix:/run/php/php7.2-fpm.sock;</span><br><span class="line">    <span class="attribute">fastcgi_param</span> SCRIPT_FILENAME <span class="variable">$document_root</span><span class="variable">$fastcgi_script_name</span>;</span><br><span class="line">    <span class="attribute">include</span> fastcgi_params;</span><br><span class="line">    <span class="attribute">include</span> snippets/fastcgi-php.conf;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="attribute">location</span> <span class="regexp">~ /\.ht</span> &#123;</span><br><span class="line">    <span class="attribute">deny</span> all;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Şimdi konfigürasyon dosyamızı oluşturup üsttekileri içine yapıştıralım.<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nano /etc/nginx/sites-enabled/duhanbalci.com</span><br></pre></td></tr></table></figure></p>
+<p>Kaydedip çıktıktan sonra bu domain için işimiz bitmiş demektir.Diğer domainler için de aynı şekilde dosya oluşturup, üsttekini yapıştırıp değişmesi gereken yerleri değiştirerek kaydedip çıkalım.Ardından alttaki komutla nginx’i yeniden başlatıyoruz.Ya da <strong>restart</strong> yerine <strong>reload</strong> yazarak da oluşturduğumuz konfigürasyon dosyalarının geçerli kılınmasını sağlayabilirsiniz.<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl restart nginx</span><br></pre></td></tr></table></figure></p>
+<p>Yazılanları yaptıysanız ve dns kayıtları aktif hale geçtiyse her şey çalışıyor olmalı.</p>
+</section>
+    <!-- Tags START -->
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+    <!-- NAV END -->
+    
+      <!-- No Comment -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#Konfigurasyon-Dosyalari"><span class="toc-nav-text">Konfigürasyon Dosyaları</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#Dns-Ayarlari"><span class="toc-nav-text">Dns Ayarları</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#Konfigurasyon-Dosyalarina-Server-Block-Ekleme"><span class="toc-nav-text">Konfigürasyon Dosyalarına Server Block Ekleme</span></a></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'http://duhanbalci.com/Nginx-Coklu-Domain-Konfigurasyonu/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+    // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+  })();
+</script>
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2019 Duhan BALCI
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<script src="/js/script.js"></script>
+  </body>
+</html>
